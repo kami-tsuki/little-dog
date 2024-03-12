@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 from tabulate import tabulate
+from tqdm import tqdm
 
 
 def print_summary(summary):
@@ -13,6 +14,11 @@ def print_summary(summary):
 def get_folder_summary(path):
     summary = {'FileType': {}, 'Folder': 0, 'Files': {}}
 
+    # Get the total number of files for the progress bar
+    total_files = sum([len(files) for _, _, files in os.walk(path)])
+
+    progress_bar = tqdm(total=total_files, ncols=100, bar_format='Scanning: {l_bar}{bar}| {percentage:3.0f}% ({n_fmt}/{total_fmt})')
+
     for root, dirs, files in os.walk(path):
         summary['Folder'] += len(dirs)
         for file in files:
@@ -22,6 +28,9 @@ def get_folder_summary(path):
                 summary['Files'][ext] = []
             summary['FileType'][ext] += 1
             summary['Files'][ext].append(os.path.join(root, file))
+            progress_bar.update(1)  # update progress bar for each file
+
+    progress_bar.close()
 
     return summary
 
@@ -70,20 +79,41 @@ def remove_empty_dirs(path):
                 print(f'Error removing directory: {os.path.join(root, name)}, {ex.strerror}')
 
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def print_menu():
+    clear_screen()
+    print('[MENU]')
+    print('0) Exit')
+    print('1) Set Path')
+    print('2) Summary')
+    print('3) Find')
+    print('4) Save as JSON (only if summary was made)')
+    print('5) Read JSON')
+    print('6) Update JSON')
+    print('7) Remove Empty Folders')
+
+
+def print_ascii_art():
+    print('''
+.____    .__  __    __  .__           ________                 
+|    |   |__|/  |__/  |_|  |   ____   \______ \   ____   ____  
+|    |   |  \   __\   __\  | _/ __ \   |    |  \ /  _ \ / ___\ 
+|    |___|  ||  |  |  | |  |_\  ___/   |    `   (  <_> ) /_/  >
+|_______ \__||__|  |__| |____/\___  > /_______  /\____/\___  / 
+        \/                        \/          \/      /_____/  
+        ''')
+    print('                            by tsuki_kami')
+
+
 def main():
+    print_ascii_art()
     path = input('Enter the path: ')
     summary = None
     while True:
-        print('[MENU]')
-        print(f'<Selected Path: {path}>')
-        print('0) Exit')
-        print('1) Set Path')
-        print('2) Summary')
-        print('3) Find')
-        print('4) Save as JSON (only if summary was made)')
-        print('5) Read JSON')
-        print('6) Update JSON')
-        print('7) Remove Empty Folders')
+        print_menu()
         option = input('Enter your option: ')
         if option == '0':
             break
@@ -116,4 +146,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nExiting...')
+    except Exception as ex:
+        print(f'An error occurred: {ex}')
+    finally:
+        input('Press any key to exit...')
