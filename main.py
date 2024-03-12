@@ -15,6 +15,7 @@ def get_folder_summary(path):
     summary = {'FileType': {}, 'Folder': 0, 'Files': {}}
 
     # Get the total number of files for the progress bar
+    print('Scanning the folder... (this may take a while)')
     total_files = sum([len(files) for _, _, files in os.walk(path)])
 
     progress_bar = tqdm(total=total_files, ncols=100, bar_format='Scanning: {l_bar}{bar}| {percentage:3.0f}% ({n_fmt}/{total_fmt})')
@@ -40,8 +41,12 @@ def find_files(summary, file_type):
     if not file_type.startswith('.'):
         file_type = '.' + file_type
     if file_type in summary['Files']:
+        total_files = len(summary['Files'][file_type])
+        progress_bar = tqdm(total=total_files, ncols=100, bar_format='Finding: {l_bar}{bar}| {percentage:3.0f}% ({n_fmt}/{total_fmt})')
         for file in summary['Files'][file_type]:
             print(file)
+            progress_bar.update(1)  # update progress bar for each file
+        progress_bar.close()
     else:
         print('No files of this type found.')
 
@@ -70,6 +75,11 @@ def update_json(filename, path):
 
 
 def remove_empty_dirs(path):
+    print('Counting directories... (this may take a while)')
+    total_dirs = sum([len(dirs) for _, dirs, _ in os.walk(path)])
+
+    progress_bar = tqdm(total=total_dirs, ncols=100, bar_format='Removing: {l_bar}{bar}| {percentage:3.0f}% ({n_fmt}/{total_fmt})')
+
     for root, dirs, _ in os.walk(path, topdown=False):
         for name in dirs:
             try:
@@ -77,6 +87,9 @@ def remove_empty_dirs(path):
                 print(f'Removed empty directory: {os.path.join(root, name)}')
             except OSError as ex:
                 print(f'Error removing directory: {os.path.join(root, name)}, {ex.strerror}')
+            progress_bar.update(1)  # update progress bar for each directory
+
+    progress_bar.close()
 
 
 def clear_screen():
@@ -97,14 +110,14 @@ def print_menu():
 
 
 def print_ascii_art():
-    print('''
-.____    .__  __    __  .__           ________                 
-|    |   |__|/  |__/  |_|  |   ____   \______ \   ____   ____  
-|    |   |  \   __\   __\  | _/ __ \   |    |  \ /  _ \ / ___\ 
-|    |___|  ||  |  |  | |  |_\  ___/   |    `   (  <_> ) /_/  >
-|_______ \__||__|  |__| |____/\___  > /_______  /\____/\___  / 
-        \/                        \/          \/      /_____/  
-        ''')
+    print('\n'
+          '.____    .__  __    __  .__           ________                 \n'
+          '|    |   |__|/  |__/  |_|  |   ____   \______ \   ____   ____  \n'
+          '|    |   |  \   __\   __\  | _/ __ \   |    |  \ /  _ \ / ___\ \n'
+          '|    |___|  ||  |  |  | |  |_\  ___/   |    `   (  <_> ) /_/  >\n'
+          '|_______ \__||__|  |__| |____/\___  > /_______  /\____/\___  / \n'
+          '        \/                        \/          \/      /_____/  \n'
+          '        ')
     print('                            by tsuki_kami')
 
 
